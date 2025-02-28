@@ -39,7 +39,7 @@
  let holdUsed = false;   // 한 드롭 당 한 번만 사용
  
  // 아이템 확률 (블록 생성 시 아이템 셀 포함 확률)
- let itemProbability = 1; // 7%
+ let itemProbability = 0.07; // 7%
  
  // 아이템 타입 및 가중치, 색상 등 확장 가능한 정보
  const itemTypes = {
@@ -653,7 +653,7 @@ function updateItemQueue() {
   
  // [삭제 아이템]: 사용 시 맨 하단 3줄 삭제 (상단에 빈 줄 추가)
  function useDeleteItem() {
-   for (let i = 0; i < 3; i++) {
+   for (let i = 0; i < 1; i++) {
      arena.pop();
      arena.unshift(new Array(arena[0].length).fill(0));
    }
@@ -661,7 +661,7 @@ function updateItemQueue() {
   
  // [추가 아이템]: 사용 시 맨 하단에 3줄 추가 (garbage row 추가)
  function useAddItem() {
-   for (let i = 0; i < 3; i++) {
+   for (let i = 0; i < 1; i++) {
      addGarbageBlocks();
    }
  }
