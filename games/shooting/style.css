@@ -1,0 +1,32 @@
+canvas {
+  background: #000;
+  display: block;
+  margin: 0 auto;
+}
+/* 레벨업 오버레이: 기본적으로 커서 이벤트 비활성화 */
+#levelUpOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 20px;
+  border: 2px solid #fff;
+  display: none;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+.skillButton {
+  margin: 10px;
+  padding: 10px 20px;
+  background: #444;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.skillButton:hover {
+  background: #666;
+}

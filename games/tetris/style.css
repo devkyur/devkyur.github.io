@@ -1,0 +1,53 @@
+/* 기본 바디 스타일 */
+body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a;
+    font-family: Arial, sans-serif;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  /* 전체 게임 영역을 담는 컨테이너: 좌우 배치 */
+  .game-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  /* 메인 테트리스 영역 스타일 */
+  .tetris-container {
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  
+  /* 캔버스 배경 색상 */
+  canvas {
+    background: #111;
+  }
+  
+  /* Next 미리보기 영역 스타일 */
+  .next-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    padding: 10px;
+  }
+  
+  .next-container h2 {
+    margin: 0 0 10px;
+    font-size: 1.2em;
+  }
+  
+  #score {
+    margin-top: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+  }
+  

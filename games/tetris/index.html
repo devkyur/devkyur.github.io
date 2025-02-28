@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>테트리스 게임</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-wrapper">
+    <!-- 메인 테트리스 영역 -->
+    <div class="tetris-container">
+      <canvas id="tetris" width="320" height="640"></canvas>
+    </div>
+    <!-- 오른쪽에 위치하는 Next 미리보기 영역 -->
+    <div class="next-container">
+      <h2>Next</h2>
+      <canvas id="next" width="150" height="150"></canvas>
+      <div id="score">Score: 0</div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
