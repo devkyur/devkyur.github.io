@@ -11,7 +11,7 @@ body {
   height: 100vh;
 }
 
-/* 전체 게임 영역을 담는 컨테이너: 좌우 배치 */
+/* 전체 게임 영역 컨테이너: 좌우 배치 */
 .game-wrapper {
   display: flex;
   flex-direction: row;
@@ -19,26 +19,11 @@ body {
   gap: 20px;
 }
 
-/* 사이드 패널: HOLD와 NEXT 영역을 세로로 배치 */
+/* 사이드 패널: NEXT, ITEM, HOLD 영역을 세로로 배치 */
 .side-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-/* HOLD 영역 스타일 */
-.hold-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 2px solid #fff;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(255,255,255,0.3);
-}
-
-.hold-container h2 {
-  margin: 0 0 10px;
-  font-size: 1.2em;
 }
 
 /* NEXT 영역 스타일 */
@@ -48,7 +33,7 @@ body {
   align-items: center;
   border: 2px solid #fff;
   padding: 10px;
-  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .next-container h2 {
@@ -62,10 +47,45 @@ body {
   font-weight: bold;
 }
 
+/* ITEM 영역 스타일 */
+.item-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #fff;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.item-container h2 {
+  margin: 0 0 10px;
+  font-size: 1.2em;
+}
+
+#itemQueue {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+/* HOLD 영역 스타일 */
+.hold-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #fff;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.hold-container h2 {
+  margin: 0 0 10px;
+  font-size: 1.2em;
+}
+
 /* 메인 테트리스 영역 스타일 */
 .tetris-container {
   border: 2px solid #fff;
-  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 /* 모든 캔버스 배경 색상 */

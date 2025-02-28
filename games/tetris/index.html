@@ -7,12 +7,17 @@
 </head>
 <body>
   <div class="game-wrapper">
-    <!-- 사이드 패널: HOLD와 NEXT 영역 -->
+    <!-- 사이드 패널: NEXT, ITEM, HOLD 영역 -->
     <div class="side-panel">
       <div class="next-container">
         <h2>Next</h2>
         <canvas id="next" width="150" height="150"></canvas>
         <div id="score">Score: 0</div>
+      </div>
+      <div class="item-container">
+        <h2>아이템</h2>
+        <!-- 아이템이 획득되면 이 영역에 queue 형태로 표시 -->
+        <div id="itemQueue">Items: </div>
       </div>
       <div class="hold-container">
         <h2>Hold</h2>
