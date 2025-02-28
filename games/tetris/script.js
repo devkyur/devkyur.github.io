@@ -1,11 +1,11 @@
 /***
- * 기능 추가
- * 1. HOLD 기능 만들기 (Shift 키)
- * 2. 속도가 점점 빨라지도록 (1점마다 속도 조절)
- * 3. 블럭이 제거될 때 이펙트 추가
+ * [기능 추가]
+ * 웹소켓 이용한 방 만들기 / 같이 게임하기
+ * 아이템 기능
  * 
- * 리펙토링
- * 1. 블럭을 배열로 변경 필요 (현재는 문자로 구분)
+ * 
+ * [리펙토링]
+ * 블럭을 배열로 변경 필요 (현재는 문자로 구분)
  */
 
  const canvas = document.getElementById('tetris');
@@ -53,8 +53,11 @@
    'I': 'cyan',
    'O': 'yellow',
    'Z': 'red',
+   'RZ': 'pink',
    'L': 'green',
-   'K': '#FFA500',
+   'RL': '#FFA500',
+   'G': 'gray',
+   'TEST': 'yellow'
  };
  
  // 게임 보드(아레나)를 생성하는 함수: 가로 16, 세로 32
@@ -70,6 +73,11 @@
  // 테트로미노(블록) 생성
  function createPiece(type) {
    switch (type) {
+    case 'TEST':
+      return [
+        ['TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST'],
+        ['TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST'],
+      ];
      case 'T':
        return [
          [0, 'T', 0],
@@ -77,10 +85,7 @@
        ];
      case 'I':  // 일자형 블록
        return [
-         [0, 0, 0, 0],
          ['I', 'I', 'I', 'I'],
-         [0, 0, 0, 0],
-         [0, 0, 0, 0],
        ];
      case 'O':  // O자형 블록
        return [
@@ -91,7 +96,11 @@
        return [
          ['Z', 'Z', 0],
          [0, 'Z', 'Z'],
-         [0, 0, 0],
+       ];
+     case 'RZ':  // 리버스 Z자형 블록
+       return [
+         [0, 'RZ', 'RZ'],
+         ['RZ', 'RZ', 0],
        ];
      case 'L':  // L자형 블록
        return [
@@ -99,11 +108,11 @@
          ['L', 0],
          ['L', 'L'],
        ];
-     case 'K':  // 반대 L (나중에 배열로 리펙토링)
+     case 'RL':  // 리버스 L자형
        return [
-         [0, 'K'],
-         [0, 'K'],
-         ['K', 'K'],
+         [0, 'RL'],
+         [0, 'RL'],
+         ['RL', 'RL'],
        ];
      default:
        return [[0]];
@@ -293,17 +302,52 @@
      updateScore();
    }
  }
- 
+
+
+ let lastScoreForGarbage = 0;
+
  // score 업데이트 함수
  function updateScore() {
    document.getElementById('score').innerText = "Score: " + score;
+
+  // score가 3점 이상 증가할 때마다 회색 블럭 추가
+  while (score - lastScoreForGarbage >= 3) {
+    addGarbageBlocks();
+    lastScoreForGarbage += 3;
+  }
+
    updateSpeed(); // 점수 변화에 따라 속도 업데이트
+   
  }
+
+ function addGarbageBlocks() {
+  const colCount = arena[0].length;
+  // 새로운 행 생성 (모든 셀은 0으로 초기화)
+  let newRow = new Array(colCount).fill(0);
+  
+  // 회색 블럭은 전체 열의 70% ~ 80% 사이로 채움
+  const minBlocks = Math.floor(colCount * 0.7);
+  const maxBlocks = Math.floor(colCount * 0.8);
+  const numBlocks = Math.floor(Math.random() * (maxBlocks - minBlocks + 1)) + minBlocks;
+  
+  let placed = 0;
+  while (placed < numBlocks) {
+    let randomCol = Math.floor(Math.random() * colCount);
+    if (newRow[randomCol] === 0) {
+      newRow[randomCol] = 'G';
+      placed++;
+    }
+  }
+  
+  // arena의 최상단 행을 제거하고, 새 회색 행을 맨 아래에 추가
+  arena.shift();
+  arena.push(newRow);
+}
  
  // 난이도 조절을 위한 speed 업데이트 함수
  function updateSpeed() {
-   // 1점마다 50ms씩 감소, 최소 100ms로 제한
-   dropInterval = Math.max(100, 1000 - score * 50);
+   // 1점마다 100ms씩 감소, 최소 100ms로 제한
+   dropInterval = Math.max(100, 1000 - score * 100);
  }
  
  // clearedRowEffects 업데이트 함수
@@ -339,7 +383,7 @@
  }
  
  // 전역 변수: 다음 블럭과 사용 가능한 블럭 종류
- const pieces = 'TIOZLK';
+ const pieces = ['T', 'I', 'O', 'Z', 'RZ', 'L', 'RL'];
  let nextPiece = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
  
  // 새로운 블럭 생성 및 플레이어 위치 초기화 함수
