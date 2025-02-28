@@ -2,10 +2,9 @@
  * [기능 추가]
  * 웹소켓 이용한 방 만들기 / 같이 게임하기
  * 아이템 기능
- * 
- * 
+ *
  * [리펙토링]
- * 블럭을 배열로 변경 필요 (현재는 문자로 구분)
+ * 
  */
 
  const canvas = document.getElementById('tetris');
@@ -41,26 +40,26 @@
  let holdPiece = null; // 처음에는 HOLD 영역이 비어있음
  let holdUsed = false; // 한 드롭 당 한 번만 사용 가능
  
- // 플레이어 객체: 현재 블록의 위치와 형태를 저장
+ // 플레이어 객체: 현재 블록의 위치와 모양을 저장
  const player = {
    pos: { x: 0, y: 0 },
    matrix: null // playerReset()에서 설정됨
  };
  
- // 각 테트로미노별 색상 지정
- const colors = {
-   'T': 'purple',
-   'I': 'cyan',
-   'O': 'yellow',
-   'Z': 'red',
-   'RZ': 'pink',
-   'L': 'green',
-   'RL': '#FFA500',
-   'G': 'gray',
-   'TEST': 'yellow'
+ // blocks 객체: 각 블록의 색상과 가중치 등 확장 가능한 정보
+ const blocks = {
+   T:    { color: 'purple',   weight: 1 },
+   I:    { color: 'cyan',     weight: 2 },
+   O:    { color: 'yellow',   weight: 1 },
+   Z:    { color: 'red',      weight: 1 },
+   RZ:   { color: 'pink',     weight: 1 },
+   L:    { color: 'green',    weight: 1 },
+   RL:   { color: '#FFA500',  weight: 1 },
+   TEST: { color: 'yellow',   weight: 0 },
+   G:    { color: 'gray',     weight: 0 }
  };
  
- // 게임 보드(아레나)를 생성하는 함수: 가로 16, 세로 32
+ // arena (게임 보드) 생성 – 여기서는 16 x 32 크기
  function createMatrix(w, h) {
    const matrix = [];
    while (h--) {
@@ -70,75 +69,94 @@
  }
  const arena = createMatrix(16, 32);
  
- // 테트로미노(블록) 생성
+ // 테트로미노(블록) 생성 함수 (각 타입에 따른 모양 반환)
  function createPiece(type) {
    switch (type) {
-    case 'TEST':
-      return [
-        ['TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST'],
-        ['TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST','TEST', 'TEST', 'TEST', 'TEST'],
-      ];
+     case 'TEST':
+       return [
+         ['TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST'],
+         ['TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST','TEST']
+       ];
      case 'T':
        return [
          [0, 'T', 0],
-         ['T', 'T', 'T'],
+         ['T', 'T', 'T']
        ];
-     case 'I':  // 일자형 블록
+     case 'I':
        return [
-         ['I', 'I', 'I', 'I'],
+         ['I','I','I','I']
        ];
-     case 'O':  // O자형 블록
+     case 'O':
        return [
-         ['O', 'O'],
-         ['O', 'O'],
+         ['O','O'],
+         ['O','O']
        ];
-     case 'Z':  // Z자형 블록
+     case 'Z':
        return [
-         ['Z', 'Z', 0],
-         [0, 'Z', 'Z'],
+         ['Z','Z',0],
+         [0,'Z','Z']
        ];
-     case 'RZ':  // 리버스 Z자형 블록
+     case 'RZ':
        return [
          [0, 'RZ', 'RZ'],
-         ['RZ', 'RZ', 0],
+         ['RZ','RZ',0]
        ];
-     case 'L':  // L자형 블록
+     case 'L':
        return [
          ['L', 0],
          ['L', 0],
-         ['L', 'L'],
+         ['L','L']
        ];
-     case 'RL':  // 리버스 L자형
+     case 'RL':
        return [
          [0, 'RL'],
          [0, 'RL'],
-         ['RL', 'RL'],
+         ['RL','RL']
        ];
      default:
        return [[0]];
    }
  }
  
- // 행렬(블록 또는 보드)를 캔버스에 그리는 함수
+ // pieces 배열: 사용할 블록 타입을 배열로 관리 (원하는 타입 추가 가능)
+ const pieces = ['T', 'I', 'O', 'Z', 'RZ', 'L', 'RL'];
+ 
+  // 가중치 기반 무작위 블록 선택 함수
+  function getRandomPieceType() {
+    const totalWeight = pieces.reduce((sum, type) => sum + blocks[type].weight, 0);
+    let random = Math.random() * totalWeight;
+    for (let type of pieces) {
+      if (random < blocks[type].weight) {
+        return type;
+      }
+      random -= blocks[type].weight;
+    }
+    return pieces[0];
+  }
+ 
+ // 다음 블럭 생성 시, 가중치에 따라 선택
+ let nextPiece = createPiece(getRandomPieceType());
+ 
+ // 행렬(블록 또는 보드)를 메인 캔버스에 그리는 함수
  function drawMatrix(matrix, offset) {
    matrix.forEach((row, y) => {
      row.forEach((value, x) => {
        if (value !== 0) {
-         context.fillStyle = colors[value] || 'red';
+         context.fillStyle = blocks[value] ? blocks[value].color : 'red';
          context.fillRect(x + offset.x, y + offset.y, 1, 1);
        }
      });
    });
  }
  
- // ghost piece(유령 블록)를 그리는 함수 (투명도 적용)
+ // ghost piece (유령 블록) 그리기 (투명도 적용)
  function drawGhost(pos, matrix) {
    context.save();
    context.globalAlpha = 0.3;
    matrix.forEach((row, y) => {
      row.forEach((value, x) => {
        if (value !== 0) {
-         context.fillStyle = colors[value] || 'red';
+         context.fillStyle = blocks[value] ? blocks[value].color : 'red';
          context.fillRect(x + pos.x, y + pos.y, 1, 1);
        }
      });
@@ -146,7 +164,7 @@
    context.restore();
  }
  
- // 다음 블럭을 그리는 함수
+ // NEXT 영역에 다음 블럭 그리기
  function drawNext() {
    if (!nextContext) return;
    nextContext.fillStyle = '#000';
@@ -159,19 +177,18 @@
    nextPiece.forEach((row, y) => {
      row.forEach((value, x) => {
        if (value !== 0) {
-         nextContext.fillStyle = colors[value] || 'red';
+         nextContext.fillStyle = blocks[value] ? blocks[value].color : 'red';
          nextContext.fillRect(x + offset.x, y + offset.y, 1, 1);
        }
      });
    });
  }
  
- // HOLD 영역에 저장된 블럭을 그리는 함수
+ // HOLD 영역에 저장된 블럭 그리기
  function drawHold() {
    if (!holdContext) return;
    holdContext.fillStyle = '#000';
    holdContext.fillRect(0, 0, holdCanvas.width / blockSize, holdCanvas.height / blockSize);
-   
    if (holdPiece) {
      const offset = {
        x: Math.floor((holdCanvas.width / blockSize - holdPiece[0].length) / 2),
@@ -180,7 +197,7 @@
      holdPiece.forEach((row, y) => {
        row.forEach((value, x) => {
          if (value !== 0) {
-           holdContext.fillStyle = colors[value] || 'red';
+           holdContext.fillStyle = blocks[value] ? blocks[value].color : 'red';
            holdContext.fillRect(x + offset.x, y + offset.y, 1, 1);
          }
        });
@@ -188,7 +205,7 @@
    }
  }
  
- // 게임 보드 전체에 픽셀 단위 격자(점선) 그리기
+ // 격자(점선) 그리기
  function drawGrid() {
    context.strokeStyle = 'rgba(255,255,255,0.3)';
    context.lineWidth = 0.05;
@@ -211,7 +228,7 @@
  // 줄 제거 이펙트를 위한 전역 변수
  let clearedRowEffects = [];
  
- // 전체 게임 상태를 그리는 함수 (배경, 보드, ghost, 플레이어 블록, 격자, 이펙트)
+ // 전체 게임 상태 그리기 (배경, arena, ghost, player, 격자, 이펙트)
  function draw() {
    context.fillStyle = '#000';
    context.fillRect(0, 0, canvas.width / blockSize, canvas.height / blockSize);
@@ -250,8 +267,8 @@
  function collide(arena, player) {
    const m = player.matrix;
    const o = player.pos;
-   for (let y = 0; y < m.length; ++y) {
-     for (let x = 0; x < m[y].length; ++x) {
+   for (let y = 0; y < m.length; y++) {
+     for (let x = 0; x < m[y].length; x++) {
        if (m[y][x] !== 0) {
          if (!arena[y + o.y] || arena[y + o.y][x + o.x] !== 0) {
            return true;
@@ -278,14 +295,14 @@
    while (!collide(arena, player)) {
      player.pos.y++;
    }
-   player.pos.y--; // 마지막 유효 위치로 복원
+   player.pos.y--; // 마지막 유효 위치 복원
    merge(arena, player);
    clearX();
    playerReset();
    dropCounter = 0;
  }
  
- // 완전히 채워진 행을 제거하고 score를 업데이트하는 함수 (이펙트 포함)
+ // 완전히 채워진 행 제거, 이펙트 및 점수 업데이트
  function clearX() {
    let rowsCleared = 0;
    for (let y = arena.length - 1; y >= 0; y--) {
@@ -302,55 +319,48 @@
      updateScore();
    }
  }
-
-
+ 
  let lastScoreForGarbage = 0;
-
- // score 업데이트 함수
+ 
+ // 점수 업데이트 및 회색 행(garbage row) 추가 (3점마다)
  function updateScore() {
    document.getElementById('score').innerText = "Score: " + score;
-
-  // score가 3점 이상 증가할 때마다 회색 블럭 추가
-  while (score - lastScoreForGarbage >= 3) {
-    addGarbageBlocks();
-    lastScoreForGarbage += 3;
-  }
-
-   updateSpeed(); // 점수 변화에 따라 속도 업데이트
    
+   while (score - lastScoreForGarbage >= 3) {
+     addGarbageBlocks();
+     lastScoreForGarbage += 3;
+   }
+   
+   updateSpeed();
  }
-
- function addGarbageBlocks() {
-  const colCount = arena[0].length;
-  // 새로운 행 생성 (모든 셀은 0으로 초기화)
-  let newRow = new Array(colCount).fill(0);
-  
-  // 회색 블럭은 전체 열의 70% ~ 80% 사이로 채움
-  const minBlocks = Math.floor(colCount * 0.7);
-  const maxBlocks = Math.floor(colCount * 0.8);
-  const numBlocks = Math.floor(Math.random() * (maxBlocks - minBlocks + 1)) + minBlocks;
-  
-  let placed = 0;
-  while (placed < numBlocks) {
-    let randomCol = Math.floor(Math.random() * colCount);
-    if (newRow[randomCol] === 0) {
-      newRow[randomCol] = 'G';
-      placed++;
-    }
-  }
-  
-  // arena의 최상단 행을 제거하고, 새 회색 행을 맨 아래에 추가
-  arena.shift();
-  arena.push(newRow);
-}
  
- // 난이도 조절을 위한 speed 업데이트 함수
+ // 회색 블럭(garbage row) 추가 함수
+ function addGarbageBlocks() {
+   const colCount = arena[0].length;
+   let newRow = new Array(colCount).fill(0);
+   const minBlocks = Math.floor(colCount * 0.7);
+   const maxBlocks = Math.floor(colCount * 0.8);
+   const numBlocks = Math.floor(Math.random() * (maxBlocks - minBlocks + 1)) + minBlocks;
+   
+   let placed = 0;
+   while (placed < numBlocks) {
+     let randomCol = Math.floor(Math.random() * colCount);
+     if (newRow[randomCol] === 0) {
+       newRow[randomCol] = 'G';
+       placed++;
+     }
+   }
+   
+   arena.shift();
+   arena.push(newRow);
+ }
+ 
+ // 난이도 조절: 1점당 100ms 감소, 최소 100ms
  function updateSpeed() {
-   // 1점마다 100ms씩 감소, 최소 100ms로 제한
    dropInterval = Math.max(100, 1000 - score * 100);
  }
  
- // clearedRowEffects 업데이트 함수
+ // 줄 제거 이펙트 업데이트 (deltaTime 단위)
  function updateClearedRowEffects(deltaTime) {
    clearedRowEffects.forEach(effect => {
      effect.remaining -= deltaTime;
@@ -358,7 +368,7 @@
    clearedRowEffects = clearedRowEffects.filter(effect => effect.remaining > 0);
  }
  
- // 현재 플레이어 블록이 hard drop 시 도달할 위치 계산
+ // ghost piece 위치 계산
  function getGhostPosition() {
    let ghostPos = { x: player.pos.x, y: player.pos.y };
    while (!collide(arena, { pos: ghostPos, matrix: player.matrix })) {
@@ -368,7 +378,7 @@
    return ghostPos;
  }
  
- // 행렬 회전 함수 (90도 시계방향)
+ // 행렬 회전 (90도 시계방향)
  function transblock(matrix) {
    const rows = matrix.length;
    const cols = matrix[0].length;
@@ -382,15 +392,11 @@
    return rotated;
  }
  
- // 전역 변수: 다음 블럭과 사용 가능한 블럭 종류
- const pieces = ['T', 'I', 'O', 'Z', 'RZ', 'L', 'RL'];
- let nextPiece = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
- 
- // 새로운 블럭 생성 및 플레이어 위치 초기화 함수
+ // 플레이어 초기화 및 다음 블록 생성
  function playerReset() {
-   holdUsed = false; // 새 블럭이 등장하면 HOLD 사용 가능해짐
+   holdUsed = false; // 새 블록 등장 시 HOLD 사용 초기화
    player.matrix = nextPiece;
-   nextPiece = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+   nextPiece = createPiece(getRandomPieceType());
    
    player.pos.y = 0;
    player.pos.x = ((arena[0].length / 2) | 0) - ((player.matrix[0].length / 2) | 0);
@@ -400,12 +406,10 @@
    }
  }
  
- // 게임 오버 처리 함수
  function gameOver() {
    isGameOver = true;
  }
  
- // 게임 루프 관련 변수 및 업데이트 함수
  let dropCounter = 0;
  let dropInterval = 1000;
  let lastTime = 0;
@@ -439,7 +443,6 @@
    requestAnimationFrame(update);
  }
  
- // 키보드 이벤트 처리
  document.addEventListener('keydown', event => {
    if (isGameOver) return;
    
@@ -480,19 +483,15 @@
    } else if (event.code === 'Space') {
      hardDrop();
    } else if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
-     // HOLD 기능 처리 (한 드롭 당 한 번만 사용)
      if (!holdUsed) {
        holdUsed = true;
        if (holdPiece === null) {
-         // HOLD 영역이 비어있으면 현재 블록을 HOLD에 저장 후, 새 블록 생성
          holdPiece = player.matrix;
          playerReset();
        } else {
-         // HOLD 영역에 블록이 있으면 현재 블록과 HOLD 블록을 교환
          let temp = player.matrix;
          player.matrix = holdPiece;
          holdPiece = temp;
-         // 새로 교환된 블록을 중앙에 위치하도록 재조정
          player.pos.x = ((arena[0].length / 2) | 0) - ((player.matrix[0].length / 2) | 0);
          player.pos.y = 0;
        }
